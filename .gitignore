@@ -1,0 +1,33 @@
+# Virtual environment
+venv/
+env/
+*.env
+
+# Dataset (do NOT push medical images!)
+data/
+
+# OS / System files
+.DS_Store
+Thumbs.db
+__MACOSX/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter / IPython
+.ipynb_checkpoints
+
+# Logs / temporary files
+*.log
+*.tmp
+
+# Kaggle API credentials
+kaggle.json
+
+# PyTorch / ML
+*.pt
+*.pth
+*.h5
