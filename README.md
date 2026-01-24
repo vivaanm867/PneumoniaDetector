@@ -1,3 +1,4 @@
+
 # Pneumonia Detection from Chest X-Rays
 Deep learning system that detects pneumonia from chest X-ray images using a fine-tuned ResNet-18 model in PyTorch.
 
@@ -36,6 +37,8 @@ This project addresses the challenge of accurately identifying pneumonia from ch
 - F1 Score: 93.38%
 - ROC-AUC: 96.82%
 
+<img width="600" height="500" alt="TestDataConfusionMatrix" src="https://github.com/user-attachments/assets/6c8773db-8ccb-436c-b04c-94d9f17aea78" />
+
 ## Tech Stack
 **Deep Learning:** PyTorch, Torchvision  
 **Data Processing:** NumPy, Pillow  
@@ -45,3 +48,4 @@ This project addresses the challenge of accurately identifying pneumonia from ch
 ## Contact
 Vivaan Motwani  
 https://github.com/vivaanm867
+
