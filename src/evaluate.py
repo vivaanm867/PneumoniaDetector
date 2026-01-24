@@ -85,7 +85,7 @@ def evaluate(model, loader):
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=["Normal", "Pneumonia"], yticklabels=["Normal", "Pneumonia"])
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
-    plt.title("Confusion Matrix (Threshold={THRESHOLD})")
+    plt.title("Confusion Matrix")
     plt.show()
 
     return acc, prec, rec, f1, roc_auc
