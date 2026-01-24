@@ -7,9 +7,9 @@ train_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.Grayscale(num_output_channels=3),
     transforms.RandomHorizontalFlip(),
-    transforms.RandomRotation(15),
-    transforms.RandomAffine(degrees=0, translate=(0.1,0.1), scale=(0.9,1.1)),
-    transforms.ColorJitter(brightness=0.1, contrast=0.1),
+    transforms.RandomRotation(10),
+    transforms.RandomAffine(degrees=0, translate=(0.1,0.1), scale=(0.95,1.05)),
+    transforms.ColorJitter(brightness=0.05, contrast=0.05),
     transforms.ToTensor(),
     transforms.Normalize([0.5], [0.5])
 ])
@@ -20,10 +20,6 @@ val_test_transforms = transforms.Compose([
     transforms.Normalize([0.5], [0.5])
 ])
 
-
-
-
-
 # load data
 train_dataset = datasets.ImageFolder(root="C:/Users/vivaa/OneDrive/Documents/GitHub/PneumoniaDetector/data/train", transform=train_transform)
 val_dataset = datasets.ImageFolder(root="C:/Users/vivaa/OneDrive/Documents/GitHub/PneumoniaDetector/data/val", transform=val_test_transforms)
@@ -31,7 +27,7 @@ test_dataset = datasets.ImageFolder(root="C:/Users/vivaa/OneDrive/Documents/GitH
 
 # create data loaders
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
 # data loader test

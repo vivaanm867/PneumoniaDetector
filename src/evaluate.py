@@ -19,6 +19,9 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MODEL_PATH = "best_pneumonia_model.pth"
 NUM_CLASSES = 2
 
+# threshold
+THRESHOLD = 0.7
+
 # load model
 def load_model():
     model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
@@ -57,7 +60,7 @@ def evaluate(model, loader):
 
             outputs = model(images)
             probs = torch.softmax(outputs, dim=1)[:, 1] #probability of class 1
-            _, preds = torch.max(outputs, 1)
+            preds = (probs >= THRESHOLD).long()
 
             all_labels.extend(labels.cpu().numpy())
             all_preds.extend(preds.cpu().numpy())
@@ -82,7 +85,7 @@ def evaluate(model, loader):
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=["Normal", "Pneumonia"], yticklabels=["Normal", "Pneumonia"])
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
-    plt.title("Confusion Matrix")
+    plt.title("Confusion Matrix (Threshold={THRESHOLD})")
     plt.show()
 
     return acc, prec, rec, f1, roc_auc

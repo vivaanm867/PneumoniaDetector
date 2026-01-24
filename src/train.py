@@ -4,6 +4,7 @@ import torch.optim as optim
 from torchvision import models
 from data_loader import train_loader, val_loader
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -31,7 +32,9 @@ def main():
     # move model to device
     model = model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    class_weights = torch.tensor([1.3, 1.0]).to(device)
+
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.Adam(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=0.0001
@@ -39,7 +42,7 @@ def main():
 
     # training loop
     num_epochs = 30
-    best_val_acc = 0.0
+    best_val_f1 = 0.0
 
     for epoch in range(num_epochs):
         model.train() #set model to training mode
@@ -85,13 +88,13 @@ def main():
                 all_labels.extend(labels.cpu().numpy())
                 all_predictions.extend(predicted.cpu().numpy())
         
-        val_accuracy = 100 * correct / total
-        print(f"Validation accuracy: {val_accuracy:.2f}%")
+        val_f1 = f1_score(all_labels, all_predictions)
+        print(f"Validation F1: {val_f1:.4f}%")
 
-        if val_accuracy > best_val_acc:
-            best_val_acc = val_accuracy
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
             torch.save(model.state_dict(), "best_pneumonia_model.pth")
-            print("Saved new best model")
+            print("Saved new best F1 model")
 
     # confusion matrix
     cm = confusion_matrix(all_labels, all_predictions)
