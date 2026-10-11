@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision import models
-from data_loader import test_loader, val_loader
+from data_loader import get_loaders
 from sklearn.metrics import (
     confusion_matrix,
     accuracy_score,
@@ -93,6 +93,7 @@ def evaluate(model, loader):
 # main
 if __name__ == "__main__":
     model = load_model()
+    _, val_loader, test_loader = get_loaders()
     print("\n--- Validation Set Metrics ---")
     evaluate(model, val_loader)
     print("\n--- Test Set Metrics ---")
