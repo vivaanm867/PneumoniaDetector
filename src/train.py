@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
-from data_loader import train_loader, val_loader
+from data_loader import get_loaders
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device {device}")
+    train_loader, val_loader, _ = get_loaders() # get loaders returns 3 loaders, traning only needs 2 of them
 
     # load pre trained model
     model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
