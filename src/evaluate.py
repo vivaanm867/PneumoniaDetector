@@ -13,14 +13,12 @@ from sklearn.metrics import (
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
 
 # config
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MODEL_PATH = "best_pneumonia_model.pth"
 NUM_CLASSES = 2
-
-# threshold
-THRESHOLD = 0.7
 
 # load model
 def load_model():
@@ -48,7 +46,7 @@ def load_model():
     return model
 
 # evaluate function
-def evaluate(model, loader):
+def evaluate(model, loader, threshold):
     all_labels = []
     all_preds = []
     all_probs = []
@@ -60,7 +58,7 @@ def evaluate(model, loader):
 
             outputs = model(images)
             probs = torch.softmax(outputs, dim=1)[:, 1] #probability of class 1
-            preds = (probs >= THRESHOLD).long()
+            preds = (probs >= threshold).long()
 
             all_labels.extend(labels.cpu().numpy())
             all_preds.extend(preds.cpu().numpy())
@@ -92,9 +90,14 @@ def evaluate(model, loader):
 
 # main
 if __name__ == "__main__":
+    # Threshold chosen on the validation set by train.py
+    with open("threshold.json") as f:
+        threshold = json.load(f)["threshold"]
+    print(f"Using threshold {threshold:.3f} (chosen on validation by train.py)")
+
     model = load_model()
     _, val_loader, test_loader = get_loaders()
     print("\n--- Validation Set Metrics ---")
-    evaluate(model, val_loader)
+    evaluate(model, val_loader, threshold)
     print("\n--- Test Set Metrics ---")
-    evaluate(model, test_loader)
+    evaluate(model, test_loader, threshold)
