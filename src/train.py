@@ -3,8 +3,24 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
 from data_loader import get_loaders, class_weights
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
+import json
+from sklearn.metrics import roc_auc_score
+from metrics import choose_threshold
+
+def get_probabilities(model, loader, device):
+    """Run the model on every image in a loader. Return the true labels and pneumonia probabilities."""
+
+    model.eval()
+    all_labels, all_probs = [], []
+
+    with torch.no_grad():
+        for images, labels in loader:
+            outputs = model(images.to(device))
+            probs = torch.softmax(outputs, dim=1)[:, 1]  # probability of class 1 = PNEUMONIA
+            all_labels.extend(labels.numpy())
+            all_probs.extend(probs.cpu().numpy())
+
+    return all_labels, all_probs
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,8 +59,8 @@ def main():
     )
 
     # training loop
-    num_epochs = 30
-    best_val_f1 = 0.0
+    num_epochs = 2
+    best_val_auc = 0.0
 
     for epoch in range(num_epochs):
         model.train() #set model to training mode
@@ -68,42 +84,27 @@ def main():
         avg_loss = running_loss / len(train_loader)
         print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}")
 
-        # Validation
-        model.eval()
-        correct = 0
-        total = 0
+        # Validation: score every validation image, measure ranking quality with ROC-AUC
+        val_labels, val_probs = get_probabilities(model, val_loader, device)
+        val_auc = roc_auc_score(val_labels, val_probs)
+        print(f"Validation ROC-AUC: {val_auc:.4f}")
 
-        all_labels = []
-        all_predictions = []
-
-        with torch.no_grad():
-            for images, labels in val_loader:
-                images = images.to(device)
-                labels = labels.to(device)
-
-                output = model(images)
-                _, predicted = torch.max(output, 1)
-
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-
-                all_labels.extend(labels.cpu().numpy())
-                all_predictions.extend(predicted.cpu().numpy())
-        
-        val_f1 = f1_score(all_labels, all_predictions)
-        print(f"Validation F1: {val_f1:.4f}%")
-
-        if val_f1 > best_val_f1:
-            best_val_f1 = val_f1
+        if val_auc > best_val_auc:
+            best_val_auc = val_auc
             torch.save(model.state_dict(), "best_pneumonia_model.pth")
-            print("Saved new best F1 model")
+            print("Saved new best model")
 
-    # confusion matrix
-    cm = confusion_matrix(all_labels, all_predictions)
-    print("Confusion Matrix:\n", cm)
+    # Choose the decision threshold on the validation set, using the BEST model (not the last one)
+    model.load_state_dict(torch.load("best_pneumonia_model.pth", map_location=device))
+    val_labels, val_probs = get_probabilities(model, val_loader, device)
+    threshold = choose_threshold(val_labels, val_probs, target_recall=0.95)
 
-    torch.save(model.state_dict(), "pneumonia_model.pth")
-    print("\nModel saved as pneumonia_model.pth")
+    print(f"\nBest validation ROC-AUC: {best_val_auc:.4f}")
+    print(f"Threshold that keeps validation recall >= 95%: {threshold:.3f}")
+
+    with open("threshold.json", "w") as f:
+        json.dump({"threshold": threshold, "target_recall": 0.95, "best_val_auc": float(best_val_auc)}, f, indent=2)
+    print("Saved threshold to threshold.json")
 
 if __name__ == "__main__":
     main()
