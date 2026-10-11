@@ -46,6 +46,7 @@ def patient_id(path):
         match = pattern.match(name)
         if match:
             return match.group(1).lower()
+        
     return name.lower()  # unknown format: treat the image as its own patient
 
 def patient_split(samples, val_fraction=0.15, seed=42):
@@ -62,6 +63,17 @@ def patient_split(samples, val_fraction=0.15, seed=42):
     train_idx, val_idx = next(splitter.split(np.zeros(len(samples)), labels, groups))
     
     return [samples[i] for i in train_idx], [samples[i] for i in val_idx]
+
+# idea is to compute the weights from the actual class counts
+# weight for a class = total images / (number of classes × images in that class
+
+def class_weights(samples, num_classes=2):
+    """Inverse-frequency weights: total / (num_classes * count) for each class."""
+
+    counts = np.bincount([label for _, label in samples], minlength=num_classes)
+    weights = len(samples) / (num_classes * counts)
+
+    return torch.tensor(weights, dtype=torch.float32)
 
 def get_loaders(data_dir=DEFAULT_DATA_DIR, batch_size=32, val_fraction=0.15, seed=42):
     data_dir = Path(data_dir)
@@ -109,6 +121,7 @@ if __name__ == "__main__":
 
     overlap = split_patients["train"] & split_patients["val"]
     print(f"Patients in both train and val: {len(overlap)}")
+    print(f"Class weights (NORMAL, PNEUMONIA): {class_weights(train_loader.dataset.samples).tolist()}")
 
     print(f"Train batches: {len(train_loader)}, Validation batches: {len(val_loader)}, Test batches: {len(test_loader)}")
     images, labels = next(iter(train_loader))

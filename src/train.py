@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
-from data_loader import get_loaders
+from data_loader import get_loaders, class_weights
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 
@@ -33,9 +33,10 @@ def main():
     # move model to device
     model = model.to(device)
 
-    class_weights = torch.tensor([1.3, 1.0]).to(device)
+    weights = class_weights(train_loader.dataset.samples) # weights computed from training samples only
+    print(f"Class weights (NORMAL, PNEUMONIA): {weights.tolist()}") # record which weights were used
+    criterion = nn.CrossEntropyLoss(weight=weights.to(device))
 
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.Adam(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=0.0001
