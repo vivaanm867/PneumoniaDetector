@@ -31,3 +31,7 @@ kaggle.json
 *.pt
 *.pth
 *.h5
+
+# Results + Thresholds
+results/
+threshold.json
