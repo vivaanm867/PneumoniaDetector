@@ -7,40 +7,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import torch
-import torch.nn as nn
 from sklearn.metrics import precision_recall_curve, roc_curve
-from torchvision import models
 
 from data_loader import get_loaders
 from metrics import bootstrap_ci, compute_metrics
-from train import get_probabilities
+from model import build_model, get_probabilities
 
 # config
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MODEL_PATH = "best_pneumonia_model.pth"
-NUM_CLASSES = 2
 RESULTS_DIR = Path("results")
 
 # load model
 def load_model():
-    model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-
-    # freeze all layers except layer 4 and fc
-    for name, param in model.named_parameters():
-        if "layer4" in name or "fc" in name:
-            param.requires_grad = True
-        else:
-            param.requires_grad = False
-    
-    # replace classifer
-    num_features = model.fc.in_features
-    model.fc = nn.Sequential(
-        nn.Linear(num_features, 256),
-        nn.ReLU(),
-        nn.Dropout(0.5),
-        nn.Linear(256, NUM_CLASSES)
-    )
-
+    model = build_model(pretrained=False)
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     model = model.to(DEVICE)
     model.eval()
