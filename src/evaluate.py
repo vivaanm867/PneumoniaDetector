@@ -8,6 +8,7 @@ import numpy as np
 import seaborn as sns
 import torch
 from sklearn.metrics import precision_recall_curve, roc_curve
+import csv
 
 from data_loader import get_loaders
 from metrics import bootstrap_ci, compute_metrics
@@ -82,6 +83,14 @@ def evaluate(model, loader, threshold, name):
     plot_curves(labels, probs, m, threshold, RESULTS_DIR / f"curves_{name}.png", name)
     with open(RESULTS_DIR / f"metrics_{name}.json", "w") as f:
         json.dump({"threshold": threshold, "n_images": len(labels), "metrics": m, "ci95": ci}, f, indent=2)
+
+    # One row per image, so gradcam.py can find the false positives and false negatives
+    with open(RESULTS_DIR / f"predictions_{name}.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["path", "label", "prob_pneumonia", "pred"])
+        for (path, _), label, prob in zip(loader.dataset.samples, labels, probs):
+            writer.writerow([path, int(label), f"{prob:.6f}", int(prob >= threshold)])
+    
     return m
 
 # main
