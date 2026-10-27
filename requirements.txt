@@ -1,10 +1,8 @@
-torch
-torchvision
-torchaudio
-numpy
-matplotlib
-scikit-learn
-opencv-python
-pillow
-streamlit
-seaborn
+# For GPU training, install torch/torchvision with the CUDA command from pytorch.org first.
+torch==2.10.0
+torchvision==0.25.0
+numpy==2.4.2
+scikit-learn==1.8.0
+matplotlib==3.10.8
+seaborn==0.13.2
+pillow==12.1.1
